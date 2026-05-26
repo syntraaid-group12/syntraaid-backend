@@ -1,0 +1,204 @@
+{
+  "info": {
+    "name": "SyntraAid - Module 5 & 6",
+    "description": "Attendance Logs + Activity Logs — strictly per SyntraAid Master Technical Playbook v2.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base", "value": "http://localhost:5000/api", "description": "Change to your live Railway URL when deployed" },
+    { "key": "token", "value": "", "description": "Auto-filled by Login request" },
+    { "key": "volunteerId", "value": "", "description": "Paste a real user _id here" },
+    { "key": "projectId", "value": "", "description": "Paste a real project _id here" },
+    { "key": "logId", "value": "", "description": "Auto-filled after POST attendance" }
+  ],
+  "item": [
+    {
+      "name": "Module 5 — Attendance Logs",
+      "description": "INSERT ONLY — no PUT, PATCH, DELETE routes exist. Playbook rule.",
+      "item": [
+        {
+          "name": "POST /attendance — Log Attendance",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.log && res.log._id) {",
+                  "  pm.collectionVariables.set('logId', res.log._id);",
+                  "  console.log('logId saved:', res.log._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base}}/attendance",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"volunteerId\": \"{{volunteerId}}\",\n  \"projectId\": \"{{projectId}}\",\n  \"sessionDate\": \"2025-06-15\",\n  \"hoursLogged\": 3.5,\n  \"notes\": \"Morning food packing session at Surulere.\"\n}"
+            },
+            "description": "Logs attendance. Field names are EXACT per playbook: volunteerId, projectId, sessionDate, hoursLogged, notes. loggedBy and loggedAt are system-set — never send them in the body."
+          }
+        },
+        {
+          "name": "POST /attendance — Log a Correction",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base}}/attendance",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"volunteerId\": \"{{volunteerId}}\",\n  \"projectId\": \"{{projectId}}\",\n  \"sessionDate\": \"2025-06-15\",\n  \"hoursLogged\": 4,\n  \"notes\": \"Correction for entry {{logId}} — original was 3.5hrs, correct is 4hrs.\"\n}"
+            },
+            "description": "Playbook rule: corrections are NEW documents. You never edit the original. The notes field references the original _id."
+          }
+        },
+        {
+          "name": "GET /attendance — All Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base}}/attendance",
+              "query": [
+                { "key": "projectId", "value": "{{projectId}}", "disabled": true },
+                { "key": "volunteerId", "value": "{{volunteerId}}", "disabled": true },
+                { "key": "startDate", "value": "2025-06-01", "disabled": true },
+                { "key": "endDate", "value": "2025-12-31", "disabled": true }
+              ]
+            },
+            "description": "Returns all logs. Enable the query params by unchecking to filter. Access: admin, coordinator only."
+          }
+        },
+        {
+          "name": "GET /attendance — Filter by Project",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base}}/attendance?projectId={{projectId}}",
+              "query": [
+                { "key": "projectId", "value": "{{projectId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /attendance — Filter by Volunteer + Date Range",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base}}/attendance?volunteerId={{volunteerId}}&startDate=2025-06-01&endDate=2025-12-31",
+              "query": [
+                { "key": "volunteerId", "value": "{{volunteerId}}" },
+                { "key": "startDate", "value": "2025-06-01" },
+                { "key": "endDate", "value": "2025-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /attendance/total/:volunteerId — Total Hours (Aggregated)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base}}/attendance/total/{{volunteerId}}",
+              "query": [
+                { "key": "projectId", "value": "{{projectId}}", "disabled": true }
+              ]
+            },
+            "description": "Returns totalHoursLogged computed on the fly via MongoDB aggregation. This value is NEVER stored as a field — always computed. Field name in response: totalHoursLogged (exact per playbook naming table)."
+          }
+        },
+        {
+          "name": "GET /attendance/export — Export for Admin",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base}}/attendance/export?projectId={{projectId}}",
+              "query": [
+                { "key": "projectId", "value": "{{projectId}}" },
+                { "key": "startDate", "value": "2025-06-01", "disabled": true },
+                { "key": "endDate", "value": "2025-12-31", "disabled": true }
+              ]
+            },
+            "description": "Admin only. Returns all logs for PDF/CSV generation."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Module 6 — Activity Logs",
+      "description": "GET routes ONLY. No POST from client. All writes go through activityLogger.js helper internally.",
+      "item": [
+        {
+          "name": "GET /activity-logs — All Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base}}/activity-logs",
+              "query": [
+                { "key": "activityType", "value": "attendance_logged", "disabled": true },
+                { "key": "targetId", "value": "{{projectId}}", "disabled": true },
+                { "key": "actorId", "value": "{{volunteerId}}", "disabled": true },
+                { "key": "startDate", "value": "2025-06-01", "disabled": true },
+                { "key": "endDate", "value": "2025-12-31", "disabled": true }
+              ]
+            },
+            "description": "Returns all activity logs. Results are sorted by createdAt descending (most recent first) per playbook index. Filter by enabling query params."
+          }
+        },
+        {
+          "name": "GET /activity-logs — Filter by activityType",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base}}/activity-logs?activityType=attendance_logged",
+              "query": [
+                { "key": "activityType", "value": "attendance_logged" }
+              ]
+            },
+            "description": "Valid activityType values (exact strings from playbook): project_created, project_status_changed, task_created, task_status_changed, volunteer_assigned, attendance_logged, milestone_completed, report_generated, donor_linked"
+          }
+        },
+        {
+          "name": "GET /activity-logs — Filter by targetId (a project)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base}}/activity-logs?targetId={{projectId}}&targetType=project",
+              "query": [
+                { "key": "targetId", "value": "{{projectId}}" },
+                { "key": "targetType", "value": "project" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /activity-logs/:id — Single Log",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base}}/activity-logs/{{logId}}",
+            "description": "Get one specific activity log by its _id."
+          }
+        }
+      ]
+    }
+  ]
+}
