@@ -9,7 +9,7 @@ const notificationPreferenceSchema = new mongoose.Schema(
     milestoneCompleted: { type: Boolean, default: true },
     preferredChannel: {
       type:    String,
-      enum:    ['in_app', 'email', 'both'],
+      enum:    ['in_app',],
       default: 'in_app',
     },
   },
