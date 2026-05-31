@@ -25,7 +25,7 @@ const notificationSchema = new mongoose.Schema(
     isRead:      { type: Boolean, default: false },
     deliveryChannel: {
       type:    String,
-      enum:    ['in_app', 'email', 'both'],
+      enum:    ['in_app',],
       default: 'in_app',
     },
     createdAt: { type: Date, default: Date.now },
