@@ -18,7 +18,7 @@ const ENUMS = {
     'milestone_completed', 'project_status_changed', 'donor_milestone_alert',
   ],
   referenceType:        ['task', 'project', 'milestone'],
-  deliveryChannel:      ['in_app', 'email', 'both'],
+  deliveryChannel:      ['in_app',],
   programHealthStatus:  ['on_track', 'at_risk', 'needs_attention', 'completed'],
   contactRequestStatus: ['new', 'reviewed', 'actioned'],
 }
