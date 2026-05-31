@@ -36,7 +36,7 @@ const ENUMS = {
 
   referenceType: ['task', 'project', 'milestone'],
 
-  deliveryChannel: ['in_app', 'email', 'both'],
+  deliveryChannel: ['in_app'],
 
   programHealthStatus: ['on_track', 'at_risk', 'needs_attention', 'completed'],
 
