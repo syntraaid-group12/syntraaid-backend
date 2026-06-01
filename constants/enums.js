@@ -36,7 +36,9 @@ const ENUMS = {
 
   referenceType: ['task', 'project', 'milestone'],
 
-  deliveryChannel: ['in_app', 'email', 'both'],
+  // Changed from ['in_app', 'email', 'both'] to in_app only
+  // Email notifications not in scope for MVP (free tier services only)
+  deliveryChannel: ['in_app'],
 
   programHealthStatus: ['on_track', 'at_risk', 'needs_attention', 'completed'],
 
